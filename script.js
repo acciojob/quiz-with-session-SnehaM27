@@ -2,9 +2,10 @@ const questionsElement = document.getElementById("questions");
 const submitBtn = document.getElementById("submit");
 const scoreDiv = document.getElementById("score");
 
+// Load progress from sessionStorage
 let userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
 
-
+// Quiz data (fixed)
 const questions = [
   {
     question: "What is the capital of France?",
@@ -33,30 +34,37 @@ const questions = [
   },
 ];
 
-// ---------------- Render Questions ----------------
+// Render questions
 function renderQuestions() {
   questionsElement.innerHTML = "";
 
   for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
     const questionDiv = document.createElement("div");
+    questionDiv.appendChild(
+      document.createTextNode(questions[i].question)
+    );
 
-    questionDiv.appendChild(document.createTextNode(question.question));
-
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
+    for (let j = 0; j < questions[i].choices.length; j++) {
+      const choice = questions[i].choices[j];
 
       const radio = document.createElement("input");
       radio.type = "radio";
       radio.name = `question-${i}`;
       radio.value = choice;
 
-      // Restore checked answers
+      // Restore checked attribute (IMPORTANT)
       if (userAnswers[i] === choice) {
-        radio.checked = true;
+        radio.setAttribute("checked", "true");
       }
 
-      radio.addEventListener("change", () => {
+      radio.addEventListener("click", () => {
+        // Remove checked attribute from same group
+        document
+          .querySelectorAll(`input[name="question-${i}"]`)
+          .forEach((el) => el.removeAttribute("checked"));
+
+        radio.setAttribute("checked", "true");
+
         userAnswers[i] = choice;
         sessionStorage.setItem("progress", JSON.stringify(userAnswers));
       });
@@ -69,7 +77,7 @@ function renderQuestions() {
   }
 }
 
-// ---------------- Submit Quiz ----------------
+// Submit quiz
 submitBtn.addEventListener("click", () => {
   let score = 0;
 
@@ -80,15 +88,14 @@ submitBtn.addEventListener("click", () => {
   }
 
   scoreDiv.textContent = `Your score is ${score} out of 5.`;
-
-  // Save score in localStorage
   localStorage.setItem("score", score);
 });
 
-// ---------------- Restore score on reload ----------------
+// Restore score after reload
 const savedScore = localStorage.getItem("score");
 if (savedScore !== null) {
   scoreDiv.textContent = `Your score is ${savedScore} out of 5.`;
 }
 
+// Initial render
 renderQuestions();
